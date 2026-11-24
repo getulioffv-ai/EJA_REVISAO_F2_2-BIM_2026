@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desafio da Revisão – Sociologia</title>
+<style>
+  :root {
+    --navy: #1f3a5f; --navy-d: #14284a; --ink: #16233a; --paper: #ffffff; --soft: #eaf0f7;
+    --line: #c5d3e4; --ok: #15803d; --ok-bg: #dcfce7; --bad: #b91c1c; --bad-bg: #fee2e2;
+    --gold: #f5b700; --muted: #5b6b82;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: Arial, Helvetica, sans-serif; color: var(--ink);
+    background: linear-gradient(160deg, var(--navy-d), var(--navy)); background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  button:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .hidden { display: none !important; }
+
+  /* ---------- Início ---------- */
+  .setup { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+  .card { background: var(--paper); border-radius: 18px; padding: 28px; width: 100%; max-width: 720px; box-shadow: 0 18px 50px rgba(0,0,0,.35); }
+  .school { text-align: center; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  h1 { margin: 0 0 4px; text-align: center; font-size: clamp(28px, 5vw, 42px); color: var(--navy); }
+  .sub { text-align: center; color: var(--muted); margin: 0 0 22px; font-size: 17px; }
+  .rules { background: var(--soft); border-left: 6px solid var(--navy); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; font-size: 16px; line-height: 1.5; }
+  .rules b { color: var(--navy); }
+  label.f { display: block; font-weight: 700; margin: 14px 0 6px; color: var(--navy); }
+  textarea { width: 100%; min-height: 140px; border: 2px solid var(--line); border-radius: 10px; padding: 10px 12px; font: 17px/1.5 Arial, sans-serif; resize: vertical; }
+  select { font: 17px Arial, sans-serif; padding: 8px 10px; border: 2px solid var(--line); border-radius: 10px; background: #fff; }
+  .row { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+  .chk { display: flex; gap: 8px; align-items: center; font-size: 17px; }
+  .chk input { width: 20px; height: 20px; }
+  .err { color: var(--bad); font-weight: 700; margin: 8px 0 0; min-height: 22px; }
+  .btn { background: var(--navy); color: #fff; border: 0; border-radius: 12px; padding: 14px 26px; font-size: 19px; font-weight: 700; }
+  .btn:hover { background: #2a4d7e; }
+  .btn.alt { background: #fff; color: var(--navy); border: 2px solid var(--navy); }
+  .btn.alt:hover { background: var(--soft); }
+  .btn.big { width: 100%; margin-top: 18px; font-size: 21px; padding: 16px; }
+  .btn.sm { padding: 8px 14px; font-size: 14px; border-radius: 9px; }
+
+  /* ---------- Jogo ---------- */
+  .game { min-height: 100%; display: flex; flex-direction: column; padding: 14px; gap: 12px; }
+  .top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; color: #fff; }
+  .top h2 { margin: 0; font-size: clamp(20px, 3vw, 28px); }
+  .turn { background: var(--gold); color: #1d1500; font-weight: 700; border-radius: 999px; padding: 10px 20px; font-size: clamp(17px, 2.2vw, 24px); }
+  .top .tools { display: flex; gap: 8px; }
+  .top .tools .btn { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.4); }
+  .top .tools .btn:hover { background: rgba(255,255,255,.25); }
+  .main { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; align-items: start; }
+  .board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+  .cat { color: #fff; border-radius: 12px; padding: 10px 6px; text-align: center; font-weight: 700; font-size: clamp(14px, 1.6vw, 21px); line-height: 1.2; display: flex; flex-direction: column; justify-content: center; min-height: 74px; }
+  .cat small { display: block; font-weight: 400; opacity: .9; font-size: .68em; margin-top: 4px; }
+  .tile { background: var(--paper); border: 0; border-radius: 12px; font-size: clamp(26px, 3.6vw, 48px); font-weight: 800; color: var(--navy); min-height: clamp(64px, 11vh, 110px); box-shadow: 0 4px 0 rgba(0,0,0,.25); transition: transform .12s; }
+  .tile:hover:not(:disabled) { transform: translateY(-3px) scale(1.03); background: #fff8dc; }
+  .tile:disabled { background: rgba(255,255,255,.16); color: rgba(255,255,255,.4); box-shadow: none; cursor: default; font-size: clamp(22px, 2.6vw, 34px); }
+  .side { background: var(--paper); border-radius: 14px; padding: 12px; max-height: calc(100vh - 100px); overflow: auto; }
+  .side h3 { margin: 4px 6px 10px; color: var(--navy); font-size: 18px; }
+  .pl { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; align-items: center; padding: 8px 8px; border-radius: 10px; border: 2px solid transparent; }
+  .pl + .pl { margin-top: 4px; }
+  .pl.cur { background: #fff4c2; border-color: var(--gold); }
+  .pl .n { width: 30px; height: 30px; border-radius: 50%; background: var(--soft); color: var(--navy); font-weight: 700; font-size: 14px; display: grid; place-items: center; }
+  .pl .nm { font-size: 18px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pl .nm small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+  .pl .pt { font-size: 24px; font-weight: 800; color: var(--navy); min-width: 52px; text-align: right; }
+  .adj { display: flex; gap: 4px; justify-content: flex-end; margin-top: 4px; grid-column: 2 / 4; }
+  .adj button { border: 1px solid var(--line); background: #fff; border-radius: 7px; font-size: 12px; padding: 2px 8px; color: var(--muted); }
+  .adj button:hover { background: var(--soft); }
+  .foot { color: rgba(255,255,255,.75); font-size: 14px; text-align: center; }
+
+  /* ---------- Pergunta ---------- */
+  .overlay { position: fixed; inset: 0; background: rgba(10, 20, 40, .82); display: flex; align-items: center; justify-content: center; padding: 14px; z-index: 10; overflow: auto; }
+  .qcard { background: var(--paper); border-radius: 20px; width: 100%; max-width: 1000px; padding: clamp(16px, 2.6vw, 32px); box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  .qhead { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .chip { color: #fff; font-weight: 700; border-radius: 999px; padding: 6px 16px; font-size: 16px; }
+  .chip.pts { background: var(--navy); }
+  .chip.who { background: var(--gold); color: #1d1500; margin-left: auto; font-size: 18px; }
+  .bonus { background: linear-gradient(90deg, #f59e0b, #ef4444); color: #fff; font-weight: 800; border-radius: 12px; padding: 10px 16px; margin-bottom: 12px; text-align: center; font-size: 20px; animation: pop .5s ease; }
+  @keyframes pop { 0% { transform: scale(.8); opacity: 0 } 70% { transform: scale(1.05) } 100% { transform: scale(1); opacity: 1 } }
+  .timer { height: 10px; background: var(--soft); border-radius: 999px; overflow: hidden; margin-bottom: 16px; }
+  .timer i { display: block; height: 100%; width: 100%; background: var(--navy); transition: width .1s linear; }
+  .timer.low i { background: var(--bad); }
+  .qtext { font-size: clamp(22px, 2.9vw, 36px); line-height: 1.35; font-weight: 700; color: var(--ink); margin: 0 0 18px; }
+  .opts { display: grid; gap: 10px; }
+  .opt { display: grid; grid-template-columns: 46px 1fr; gap: 12px; align-items: center; text-align: left; background: var(--soft); border: 3px solid transparent; border-radius: 14px; padding: 12px 14px; font-size: clamp(18px, 2.2vw, 28px); color: var(--ink); line-height: 1.3; }
+  .opt .l { width: 40px; height: 40px; border-radius: 50%; background: var(--navy); color: #fff; font-weight: 800; display: grid; place-items: center; font-size: 20px; }
+  .opt:hover:not(:disabled) { border-color: var(--navy); background: #dde8f6; }
+  .opt:disabled { cursor: default; }
+  .opt.out { opacity: .3; text-decoration: line-through; }
+  .opt.right { background: var(--ok-bg); border-color: var(--ok); }
+  .opt.right .l { background: var(--ok); }
+  .opt.wrong { background: var(--bad-bg); border-color: var(--bad); }
+  .opt.wrong .l { background: var(--bad); }
+  .vf { grid-template-columns: 1fr 1fr; }
+  .qtools { display: flex; justify-content: flex-end; margin-top: 12px; }
+  .fb { margin-top: 16px; border-radius: 14px; padding: 14px 18px; background: var(--soft); border-left: 8px solid var(--navy); }
+  .fb.ok { background: var(--ok-bg); border-color: var(--ok); }
+  .fb.no { background: var(--bad-bg); border-color: var(--bad); }
+  .fb h4 { margin: 0 0 6px; font-size: clamp(20px, 2.4vw, 30px); }
+  .fb p { margin: 0; font-size: clamp(16px, 1.8vw, 22px); line-height: 1.45; }
+  .next { display: flex; justify-content: flex-end; margin-top: 14px; }
+
+  /* ---------- Fim ---------- */
+  .end { min-height: 100%; padding: 22px 14px; display: flex; flex-direction: column; align-items: center; gap: 18px; color: #fff; }
+  .end h2 { margin: 0; font-size: clamp(30px, 5vw, 52px); text-align: center; }
+  .podium { display: flex; gap: 14px; align-items: flex-end; justify-content: center; flex-wrap: wrap; }
+  .pod { background: var(--paper); color: var(--navy); border-radius: 16px 16px 0 0; text-align: center; padding: 14px 18px; min-width: 190px; }
+  .pod .m { font-size: 40px; font-weight: 800; }
+  .pod .nn { font-size: 22px; font-weight: 700; word-break: break-word; }
+  .pod .pp { font-size: 30px; font-weight: 800; }
+  .pod.p1 { background: var(--gold); color: #1d1500; padding-top: 34px; padding-bottom: 26px; }
+  .pod.p2 { padding-top: 22px; }
+  .rank { background: var(--paper); color: var(--ink); border-radius: 14px; padding: 12px 18px; width: 100%; max-width: 640px; }
+  .rank div { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 19px; }
+  .rank div:last-child { border: 0; }
+  .endbtns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .endbtns .btn.alt { background: transparent; color: #fff; border-color: #fff; }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .side { max-height: none; }
+    .board { gap: 6px; }
+    .cat { min-height: 62px; padding: 6px 2px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- ============ INÍCIO ============ -->
+<section id="setup" class="setup">
+  <div class="card">
+    <p class="school">Colégio Everest Internacional · EJA · Sociologia</p>
+    <h1>Desafio da Revisão</h1>
+    <p class="sub">2º bimestre · Raça e relações raciais sob o olhar da Sociologia</p>
+    <div class="rules">
+      <b>Como jogar:</b> cada estudante, na sua vez, escolhe uma casa do tabuleiro (quanto mais pontos, mais difícil). Responda à pergunta e ganhe os pontos! Cada um tem <b>uma dica</b> por jogo, que elimina duas alternativas. Há <b>2 casas-coringa escondidas</b> que valem pontos em dobro. Ao fim de cada pergunta, aparece uma explicação para todos aprenderem juntos.
+    </div>
+    <label class="f" for="nomes">Nomes dos estudantes (um por linha)</label>
+    <textarea id="nomes" placeholder="Maria&#10;José&#10;Ana&#10;..."></textarea>
+    <div class="row" style="margin-top:12px">
+      <div>
+        <label class="f" for="tempo" style="margin:0 0 4px">Tempo por pergunta</label>
+        <select id="tempo">
+          <option value="0">Sem limite de tempo</option>
+          <option value="45">45 segundos</option>
+          <option value="60" selected>60 segundos</option>
+          <option value="90">90 segundos</option>
+        </select>
+      </div>
+      <label class="chk" style="margin-top:22px"><input type="checkbox" id="sorteio" checked> Sortear a ordem dos estudantes</label>
+    </div>
+    <p class="err" id="err" role="alert"></p>
+    <button class="btn big" id="start">Começar o jogo</button>
+  </div>
+</section>
+
+<!-- ============ TABULEIRO ============ -->
+<section id="game" class="game hidden">
+  <div class="top">
+    <h2>Desafio da Revisão</h2>
+    <div class="turn" id="turn" aria-live="polite"></div>
+    <div class="tools">
+      <button class="btn sm" id="skip" title="Passa a vez, por exemplo se o estudante faltou">Pular estudante</button>
+      <button class="btn sm" id="restart">Reiniciar</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="board" id="board"></div>
+    <aside class="side"><h3>Placar</h3><div id="score"></div></aside>
+  </div>
+  <div class="foot" id="foot"></div>
+</section>
+
+<!-- ============ PERGUNTA ============ -->
+<div id="ov" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="qtext">
+  <div class="qcard">
+    <div class="qhead">
+      <span class="chip" id="qcat"></span><span class="chip pts" id="qpts"></span><span class="chip who" id="qwho"></span>
+    </div>
+    <div class="bonus hidden" id="bonus">CORINGA! Esta pergunta vale PONTOS EM DOBRO</div>
+    <div class="timer" id="timer"><i></i></div>
+    <p class="qtext" id="qtext"></p>
+    <div class="opts" id="opts"></div>
+    <div class="qtools"><button class="btn sm alt" id="hint">Usar minha dica (elimina 2)</button></div>
+    <div class="fb hidden" id="fb" aria-live="polite"><h4 id="fbt"></h4><p id="fbp"></p></div>
+    <div class="next hidden" id="nextw"><button class="btn" id="next">Continuar</button></div>
+  </div>
+</div>
+
+<!-- ============ FIM ============ -->
+<section id="end" class="end hidden">
+  <h2>Fim de jogo! Parabéns a todos!</h2>
+  <div class="podium" id="podium"></div>
+  <div class="rank" id="rank"></div>
+  <div class="endbtns">
+    <button class="btn" id="again">Jogar de novo (mesmos nomes)</button>
+    <button class="btn alt" id="fresh">Novo grupo de estudantes</button>
+  </div>
+</section>
+
+<script>
+// Primeira alternativa de cada questão objetiva = resposta certa (o builder embaralha a posição).
+const CATS = [
+  { nome: 'Construção Social', aula: 'Aula 1', cor: '#0f766e' },
+  { nome: 'Abolição e Branqueamento', aula: 'Aula 2', cor: '#4338ca' },
+  { nome: 'Democracia Racial', aula: 'Aula 3', cor: '#b45309' },
+  { nome: 'Vista Minha Pele', aula: 'Aula 4', cor: '#be123c' },
+  { nome: 'Pensadores e Leis', aula: 'Aulas 1 a 4', cor: '#6d28d9' },
+];
+
+const VF = ['Verdadeiro', 'Falso'];
+
+// QUESTOES[categoria][nível] — níveis 10, 20, 30, 40 pontos
+const QUESTOES = [
+  [
+    { vf: true, q: 'Verdadeiro ou falso? Etnia e cor ou raça são sinônimos na Sociologia.', ok: 1,
+      exp: 'Falso. Etnia é um conceito cultural: língua, tradições, religião e origem comum. Cor ou raça, no IBGE, é a categoria que a própria pessoa escolhe para si, a autodeclaração.' },
+    { q: 'Pelo Censo 2022 do IBGE, pretos (10,2%) e pardos (45,3%) somam',
+      alts: ['55,5% da população, a maioria do país.', '43,5% da população, menos que os brancos.', '10,2% da população, um grupo bem pequeno.', '45,3% da população, igual aos pardos.'],
+      exp: 'Pretos e pardos formam mais da metade da população (55,5%). Os pardos são o maior grupo isolado. Os dados vêm da autodeclaração.' },
+    { q: 'Um turista acha “atrasado” o modo como uma comunidade tradicional organiza a vida, porque compara tudo ao seu próprio jeito de viver. Esse olhar é',
+      alts: ['etnocêntrico: toma o próprio grupo como medida do certo.', 'relativista: entende cada cultura por seus próprios valores.', 'científico: baseia-se em medições feitas em laboratório.', 'democrático: valoriza igualmente todas as formas de vida.'],
+      exp: 'Etnocentrismo é julgar outras culturas tendo a sua como modelo superior. Esse olhar alimentou hierarquias entre os povos e justificou a colonização.' },
+    { q: 'Em 1950, a UNESCO declarou que raça não tem base biológica. Então, para a Sociologia, estudar a raça serve para',
+      alts: ['entender como uma ideia social produz desigualdades reais.', 'provar que há diferenças biológicas entre os grupos humanos.', 'negar que a discriminação exista na sociedade brasileira.', 'separar as pessoas por traços do corpo e da aparência.'],
+      exp: 'Raça não existe como fato biológico, mas existe como construção social: uma ideia criada na história que tem efeitos concretos na vida das pessoas.' },
+  ],
+  [
+    { vf: true, q: 'Verdadeiro ou falso? Depois de 1888, o Estado criou políticas para integrar os libertos ao mercado de trabalho e à escola.', ok: 1,
+      exp: 'Falso. A abolição foi sem direitos: não houve terra, escola, moradia nem indenização aos libertos.' },
+    { q: 'A Lei de Terras (1850) determinou que a terra só poderia ser obtida por compra. Qual foi o efeito para os futuros libertos?',
+      alts: ['Ficaram sem meios de comprar terra e ter moradia.', 'Receberam lotes gratuitos para plantar e criar famílias.', 'Passaram a ser donos das fazendas onde trabalhavam.', 'Foram indenizados pelo Estado pelos anos de trabalho.'],
+      exp: 'Sem dinheiro, os libertos ficaram longe da propriedade da terra. A lei ajudou a manter a desigualdade depois da abolição.' },
+    { q: 'Em 1911, o médico João Batista de Lacerda previu, no Congresso Universal das Raças, que o Brasil',
+      alts: ['ficaria branco em cerca de um século pela mistura.', 'teria maioria negra no século seguinte pela natalidade.', 'dividiria o país em regiões separadas por cor.', 'eliminaria toda a desigualdade em poucas décadas.'],
+      exp: 'É a tese do branqueamento: a ideia de que a população se tornaria branca. Ela inspirou o incentivo à imigração europeia (Decreto 528, de 1890) e deixou os trabalhadores negros sem oportunidades.' },
+    { q: 'A vadiagem e a capoeiragem foram criminalizadas pelo Código Penal de 1890. Isso mostra que a abolição foi “sem direitos”, pois',
+      alts: ['puniram quem estava sem trabalho e sem proteção.', 'protegeram os libertos de abusos cometidos pelos patrões.', 'foram crimes aplicados igualmente a toda a elite do país.', 'garantiram emprego a todos os recém-libertos do campo.'],
+      exp: 'Quem não tinha emprego formal podia ser preso por “vadiagem”, e a capoeira virou crime. Foi uma forma de controlar e punir a população negra liberta.' },
+  ],
+  [
+    { vf: true, q: 'Verdadeiro ou falso? A ideia de democracia racial sustenta que no Brasil há harmonia entre os grupos e não há racismo.', ok: 0,
+      exp: 'Verdadeiro, mas é um mito. A ideia foi associada a Gilberto Freyre (Casa-Grande & Senzala, 1933) e esconde as desigualdades.' },
+    { q: 'Nos anos 1950, a UNESCO financiou pesquisas no Brasil para estudar a “convivência racial”. O resultado foi',
+      alts: ['encontrar racismo e desigualdades entre os grupos.', 'confirmar que o país vivia uma harmonia racial completa.', 'provar que a mistura de povos eliminou o preconceito.', 'concluir que a cor da pele não influenciava o emprego.'],
+      exp: 'Os pesquisadores encontraram racismo, discriminação e desigualdades de renda, trabalho e escolaridade. As pesquisas abalaram o mito da democracia racial.' },
+    { q: 'A Lei Afonso Arinos (1951) tratou o preconceito racial como contravenção penal. Isso mostra que, na época,',
+      alts: ['a discriminação existia e precisava ser combatida.', 'a discriminação já tinha acabado; a lei era simbólica.', 'o racismo era permitido e aceito em todos os espaços.', 'só estrangeiros praticavam atos de discriminação.'],
+      exp: 'Ninguém cria uma lei contra algo que não existe. A lei nasceu justamente porque a discriminação acontecia.' },
+    { q: 'Dizer “racismo existe, mas é coisa dos outros” ilustra a expressão de Florestan Fernandes e Roger Bastide:',
+      alts: ['preconceito de ter preconceito: envergonhar-se dele.', 'preconceito de origem: discriminar pela ascendência.', 'preconceito de marca: discriminar pela aparência.', 'preconceito científico: ideia baseada em experimentos.'],
+      exp: 'Os brasileiros reconhecem que o racismo é errado, mas negam tê-lo. Isso esconde o problema em vez de enfrentá-lo.' },
+  ],
+  [
+    { vf: true, q: 'Verdadeiro ou falso? Preconceito e discriminação são a mesma coisa.', ok: 1,
+      exp: 'Falso. Preconceito é a ideia ou opinião formada antes de conhecer. Discriminação é a ação: o tratamento desigual na prática.' },
+    { q: 'No curta “Vista Minha Pele”, a inversão de papéis (negros no poder, brancos discriminados) serve para provocar',
+      alts: ['estranhamento: estranhar o que parecia natural.', 'humor: divertir o público com situações irreais.', 'medo: assustar a plateia com um futuro possível.', 'resignação: mostrar que nada pode ser mudado.'],
+      exp: 'O estranhamento é a desnaturalização do racismo: percebemos que ele é construído pela sociedade e não é natural.' },
+    { q: 'Uma empresa só promove pessoas brancas porque “sempre foi assim” nas regras internas, sem que alguém admita racismo. Isso é racismo',
+      alts: ['institucional: está nas regras da própria instituição.', 'individual: depende só da maldade de uma única pessoa.', 'inexistente: a prática não afeta ninguém de verdade.', 'acidental: acontece sem qualquer efeito duradouro.'],
+      exp: 'No racismo institucional, as regras e rotinas de escolas, empresas e órgãos públicos favorecem um grupo e prejudicam outro, mesmo sem declarar essa intenção.' },
+    { q: 'Para Silvio Almeida, o racismo é estrutural porque',
+      alts: ['está na organização da sociedade, mesmo sem intenção.', 'só aparece em leis que proíbem a igualdade entre grupos.', 'depende apenas da vontade de pessoas preconceituosas.', 'existe somente nas instituições públicas do Estado.'],
+      exp: 'O racismo está na própria organização da sociedade (economia, política, relações) e funciona mesmo sem a intenção de cada pessoa.' },
+  ],
+  [
+    { q: 'Quem foi Luiz Gama?',
+      alts: ['Ex-escravizado que virou advogado e libertou pessoas.', 'Princesa que assinou a lei que acabou com a escravidão.', 'Médico que previu o desaparecimento da população negra.', 'Autor de Casa-Grande & Senzala, publicado em 1933.'],
+      exp: 'Luiz Gama usou as leis do próprio Império para libertar escravizados. A liberdade foi conquistada também pela luta de negros e negras.' },
+    { q: 'A Frente Negra Brasileira, fundada em 1931, foi',
+      alts: ['uma organização política e social da população negra.', 'um partido criado pelo governo para apoiar a imigração.', 'uma escola de capoeira reconhecida pelo Código Penal.', 'um órgão do Império para fiscalizar os libertos.'],
+      exp: 'A FNB nasceu em São Paulo, virou partido em 1936 e foi extinta em 1937 pelo Estado Novo. Mostra a organização política da população negra.' },
+    { q: 'A Constituição de 1988 definiu o racismo como crime',
+      alts: ['inafiançável e imprescritível, sem fiança nem prazo.', 'afiançável e prescritível, com fiança e com prazo.', 'inafiançável, mas prescritível depois de alguns anos.', 'imprescritível, mas permite pagar fiança para sair.'],
+      exp: 'Art. 5º, XLII: inafiançável (não cabe fiança) e imprescritível (não “expira”). A Lei 7.716/1989 define os crimes.' },
+    { q: 'Cida Bento chama de “pacto da branquitude”',
+      alts: ['o acordo silencioso que protege privilégios brancos.', 'o tratado oficial entre países para acabar com o racismo.', 'o movimento de brancos para apoiar as cotas raciais.', 'o contrato legal que garante igualdade entre os grupos.'],
+      exp: 'É um pacto muitas vezes não dito, que mantém as vantagens do grupo branco e evita discutir a desigualdade racial.' },
+  ],
+];
+
+
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var LET = ['A', 'B', 'C', 'D'];
+  var PTS = [10, 20, 30, 40];
+  var P = []; var turn = 0; var used = {}; var bonus = {}; var cur = null; var locked = false;
+  var tmax = 60, tleft = 0, tid = null, lastNames = [];
+
+  // posições da resposta certa: distribuídas de forma variada
+  var POS = [0, 1, 2, 3, 2, 0, 3, 1, 1, 3, 0, 2, 3, 2, 1, 0, 0, 2, 1, 3];
+  var Q = [];
+  QUESTOES.forEach(function (cat, ci) {
+    Q[ci] = cat.map(function (q, pi) {
+      if (q.vf) return { vf: true, q: q.q, alts: VF, ok: q.ok, exp: q.exp };
+      var pos = POS[ci * 4 + pi] % q.alts.length;
+      var a = q.alts.slice(1); a.splice(pos, 0, q.alts[0]);
+      return { vf: false, q: q.q, alts: a, ok: pos, exp: q.exp };
+    });
+  });
+
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function show(id) { ['setup', 'game', 'end'].forEach(function (s) { $(s).classList.toggle('hidden', s !== id); }); window.scrollTo(0, 0); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  function start(names) {
+    P = names.map(function (n) { return { nome: n, pontos: 0, dica: true }; });
+    if ($('sorteio').checked) shuffle(P);
+    turn = 0; used = {}; bonus = {};
+    var all = []; for (var c = 0; c < 5; c++) for (var p = 1; p < 4; p++) all.push(c + '-' + p);
+    shuffle(all).slice(0, 2).forEach(function (k) { bonus[k] = true; });
+    renderBoard(); show('game');
+  }
+
+  $('start').onclick = function () {
+    var names = $('nomes').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 40);
+    if (!names.length) { $('err').textContent = 'Digite pelo menos um nome para começar.'; return; }
+    $('err').textContent = ''; tmax = parseInt($('tempo').value, 10); lastNames = names.slice(); start(names);
+  };
+
+  function renderBoard() {
+    var b = $('board'); b.innerHTML = '';
+    CATS.forEach(function (c) { var d = document.createElement('div'); d.className = 'cat'; d.style.background = c.cor; d.innerHTML = esc(c.nome) + '<small>' + esc(c.aula) + '</small>'; b.appendChild(d); });
+    for (let p = 0; p < 4; p++) CATS.forEach(function (c, ci) {
+      var k = ci + '-' + p, t = document.createElement('button'); t.className = 'tile';
+      t.setAttribute('aria-label', c.nome + ', ' + PTS[p] + ' pontos');
+      if (used[k]) { t.disabled = true; t.textContent = '✓'; } else { t.textContent = PTS[p]; t.onclick = function () { openTile(ci, p); }; }
+      b.appendChild(t);
+    });
+    var n = Object.keys(used).length;
+    $('foot').textContent = 'Casas jogadas: ' + n + ' de 20';
+    $('turn').textContent = 'Vez de: ' + P[turn].nome;
+    renderScore();
+  }
+
+  function renderScore() {
+    var s = $('score'); s.innerHTML = '';
+    P.forEach(function (p, i) {
+      var d = document.createElement('div'); d.className = 'pl' + (i === turn ? ' cur' : '');
+      d.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="nm">' + esc(p.nome) + '<small>' + (p.dica ? 'dica disponível' : 'dica usada') + '</small></span><span class="pt">' + p.pontos + '</span>';
+      var a = document.createElement('div'); a.className = 'adj';
+      [['−5', -5], ['+5', 5]].forEach(function (x) { var bt = document.createElement('button'); bt.textContent = x[0]; bt.setAttribute('aria-label', x[0] + ' pontos para ' + p.nome); bt.onclick = function () { p.pontos = Math.max(0, p.pontos + x[1]); renderScore(); }; a.appendChild(bt); });
+      d.appendChild(a); s.appendChild(d);
+    });
+  }
+
+  function openTile(ci, pi) {
+    var q = Q[ci][pi]; cur = { ci: ci, pi: pi, q: q, key: ci + '-' + pi, dobro: !!bonus[ci + '-' + pi] }; locked = false;
+    var c = CATS[ci];
+    $('qcat').textContent = c.nome; $('qcat').style.background = c.cor;
+    $('qpts').textContent = PTS[pi] + ' pontos'; $('qwho').textContent = P[turn].nome;
+    $('bonus').classList.toggle('hidden', !cur.dobro);
+    $('qtext').textContent = q.q;
+    var o = $('opts'); o.innerHTML = ''; o.className = 'opts' + (q.vf ? ' vf' : '');
+    q.alts.forEach(function (t, i) {
+      var bt = document.createElement('button'); bt.className = 'opt'; bt.dataset.i = i;
+      bt.innerHTML = '<span class="l">' + (q.vf ? (i === 0 ? 'V' : 'F') : LET[i]) + '</span><span>' + esc(t) + '</span>';
+      bt.onclick = function () { answer(i); }; o.appendChild(bt);
+    });
+    $('hint').classList.toggle('hidden', q.vf || !P[turn].dica);
+    $('fb').classList.add('hidden'); $('nextw').classList.add('hidden');
+    $('ov').classList.remove('hidden');
+    startTimer();
+  }
+
+  function startTimer() {
+    stopTimer(); var tm = $('timer'); tm.classList.remove('low'); tm.firstElementChild.style.width = '100%';
+    tm.classList.toggle('hidden', !tmax);
+    if (!tmax) return; tleft = tmax * 1000;
+    tid = setInterval(function () {
+      tleft -= 100; tm.firstElementChild.style.width = Math.max(0, tleft / (tmax * 1000) * 100) + '%';
+      tm.classList.toggle('low', tleft < 10000);
+      if (tleft <= 0) { answer(-1); }
+    }, 100);
+  }
+  function stopTimer() { if (tid) { clearInterval(tid); tid = null; } }
+
+  $('hint').onclick = function () {
+    if (locked || !cur || cur.q.vf || !P[turn].dica) return;
+    P[turn].dica = false; $('hint').classList.add('hidden');
+    var wrong = []; cur.q.alts.forEach(function (_, i) { if (i !== cur.q.ok) wrong.push(i); });
+    shuffle(wrong).slice(0, 2).forEach(function (i) { var b = $('opts').children[i]; b.classList.add('out'); b.disabled = true; });
+    renderScore();
+  };
+
+  function answer(i) {
+    if (locked) return; locked = true; stopTimer();
+    var q = cur.q, ok = i === q.ok, gain = ok ? PTS[cur.pi] * (cur.dobro ? 2 : 1) : 0;
+    Array.prototype.forEach.call($('opts').children, function (b, k) {
+      b.disabled = true;
+      if (k === q.ok) b.classList.add('right'); else if (k === i) b.classList.add('wrong');
+    });
+    $('hint').classList.add('hidden');
+    var fb = $('fb'); fb.className = 'fb ' + (ok ? 'ok' : 'no');
+    $('fbt').textContent = ok ? ('Correto! +' + gain + ' pontos' + (cur.dobro ? ' (em dobro!)' : '')) : (i === -1 ? 'O tempo acabou! A resposta certa está em verde.' : 'Não foi dessa vez. A resposta certa está em verde.');
+    $('fbp').textContent = q.exp;
+    if (ok) P[turn].pontos += gain;
+    $('nextw').classList.remove('hidden'); $('next').focus({ preventScroll: true });
+    fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  $('next').onclick = function () {
+    if (!locked) return;
+    $('ov').classList.add('hidden'); used[cur.key] = true; cur = null;
+    if (Object.keys(used).length >= 20) { showEnd(); return; }
+    turn = (turn + 1) % P.length; renderBoard();
+  };
+
+  $('skip').onclick = function () { turn = (turn + 1) % P.length; renderBoard(); };
+
+  var rs = false;
+  $('restart').onclick = function () {
+    if (!rs) { rs = true; this.textContent = 'Clique de novo para confirmar'; var b = this; setTimeout(function () { rs = false; b.textContent = 'Reiniciar'; }, 3000); return; }
+    rs = false; this.textContent = 'Reiniciar'; stopTimer(); $('ov').classList.add('hidden'); show('setup');
+  };
+
+  function showEnd() {
+    var r = P.slice().sort(function (a, b) { return b.pontos - a.pontos; });
+    var pos = 0, last = null; r.forEach(function (p, i) { if (p.pontos !== last) { pos = i + 1; last = p.pontos; } p.pos = pos; });
+    var pod = $('podium'); pod.innerHTML = '';
+    var top = r.filter(function (p) { return p.pos <= 3; });
+    var order = top.length >= 3 ? [top.filter(function (p) { return p.pos === 2; }), top.filter(function (p) { return p.pos === 1; }), top.filter(function (p) { return p.pos === 3; })] : [top];
+    var medal = ['1º', '2º', '3º'];
+    top.sort(function (a, b) { return a.pos - b.pos; }).forEach(function (p) {
+      var d = document.createElement('div'); d.className = 'pod p' + p.pos;
+      d.innerHTML = '<div class="m">' + medal[p.pos - 1] + '</div><div class="nn">' + esc(p.nome) + '</div><div class="pp">' + p.pontos + ' pts</div>';
+      pod.appendChild(d);
+    });
+    var rk = $('rank'); rk.innerHTML = '';
+    r.forEach(function (p) { var d = document.createElement('div'); d.innerHTML = '<span>' + p.pos + 'º</span><span>' + esc(p.nome) + '</span><b>' + p.pontos + '</b>'; rk.appendChild(d); });
+    show('end');
+  }
+
+  $('again').onclick = function () { start(lastNames.slice()); };
+  $('fresh').onclick = function () { show('setup'); };
+
+  document.addEventListener('keydown', function (e) {
+    if ($('ov').classList.contains('hidden')) return;
+    var k = e.key.toLowerCase();
+    if (!locked) {
+      var idx = 'abcd'.indexOf(k); if (idx < 0) idx = '1234'.indexOf(k);
+      if (idx >= 0 && idx < cur.q.alts.length && !$('opts').children[idx].disabled) { answer(idx); }
+      else if (cur.q.vf && (k === 'v' || k === 'f')) { answer(k === 'v' ? 0 : 1); }
+    } else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('next').click(); }
+  });
+})();
+</script>
+</body>
+</html>
